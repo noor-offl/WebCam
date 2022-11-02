@@ -29,15 +29,28 @@ class MainActivity : AppCompatActivity() {
             webChromeClient = setChromeClient()
             webViewClient = WebViewClient()
             configureWebSettings(settings)
-            loadUrl("https://www.google.com/search?q=test+mic")
+            loadUrl("https://www.google.com/search?q=test+webcam")
         }
+
+        binding.btnTestMic.setOnClickListener {
+            binding.webView.loadUrl("https://www.google.com/search?q=test+mic")
+        }
+
+        binding.btnTestWebcam.setOnClickListener {
+            binding.webView.loadUrl("https://www.google.com/search?q=test+webcam")
+        }
+
+        /*requestPermissions(
+            arrayOf(Manifest.permission.CAMERA), RC_CAMERA
+        )*/
+
     }
 
     private fun configureWebSettings(settings: WebSettings) {
         settings.javaScriptEnabled = true
-        settings.useWideViewPort = true
+        /*settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
-        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        settings.cacheMode = WebSettings.LOAD_NO_CACHE*/
     }
 
     private fun setChromeClient() = object : WebChromeClient() {
@@ -45,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             for (r in request!!.resources) {
                 if (PermissionRequest.RESOURCE_VIDEO_CAPTURE == r) {
                     mRequest = request
+                    //mRequest!!.grant(mRequest!!.resources)
                     askForPermission(
                         arrayOf(Manifest.permission.CAMERA),
                         "Camera",
@@ -55,6 +69,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (PermissionRequest.RESOURCE_AUDIO_CAPTURE == r) {
                     mRequest = request
+                    //mRequest!!.grant(mRequest!!.resources)
                     askForPermission(
                         arrayOf(Manifest.permission.RECORD_AUDIO),
                         "Microphone",
@@ -72,8 +87,9 @@ class MainActivity : AppCompatActivity() {
         requestCode: Int,
         whiteList: ArrayList<String>
     ) {
-        if (whiteList.contains(mRequest!!.origin.toString())) requestPermissions(
-            arrayOf(Manifest.permission.RECORD_AUDIO), RC_RECORD_AUDIO
+        if (whiteList.contains(mRequest!!.origin.toString()))
+            requestPermissions(
+            permission, requestCode
         )
         else {
             val builder = AlertDialog.Builder(this@MainActivity).setTitle("$hardware permission")
@@ -83,6 +99,7 @@ class MainActivity : AppCompatActivity() {
                         permission, requestCode
                     )
                 }.setNegativeButton("Deny") { i, which ->
+                    mRequest!!.deny()
                     i.dismiss()
                 }
             builder.create().show()
