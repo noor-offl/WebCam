@@ -2,6 +2,7 @@ package com.example.webcam
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
@@ -40,9 +41,9 @@ class MainActivity : AppCompatActivity() {
             binding.webView.loadUrl("https://www.google.com/search?q=test+webcam")
         }
 
-        /*requestPermissions(
-            arrayOf(Manifest.permission.CAMERA), RC_CAMERA
-        )*/
+        /*if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), RC_CAMERA)
+        }*/
 
     }
 
@@ -89,8 +90,8 @@ class MainActivity : AppCompatActivity() {
     ) {
         if (whiteList.contains(mRequest!!.origin.toString()))
             requestPermissions(
-            permission, requestCode
-        )
+                permission, requestCode
+            )
         else {
             val builder = AlertDialog.Builder(this@MainActivity).setTitle("$hardware permission")
                 .setMessage("${mRequest!!.origin} wants to access ${hardware.lowercase()}")
@@ -110,19 +111,30 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (PackageManager.PERMISSION_GRANTED == grantResults[0]) {
-            if (RC_CAMERA == requestCode) {
-                mRequest!!.grant(mRequest!!.resources)
-                cameraWhiteList.add(mRequest!!.origin.toString())
+        when (requestCode) {
+            RC_CAMERA -> {
+                if (isResultsGranted(grantResults) && mRequest != null) {
+                    mRequest!!.grant(mRequest!!.resources)
+                    cameraWhiteList.add(mRequest!!.origin.toString())
+                }
             }
 
-            if (RC_RECORD_AUDIO == requestCode) {
-                mRequest!!.grant(mRequest!!.resources)
-                micWhiteList.add(mRequest!!.origin.toString())
+            RC_RECORD_AUDIO -> {
+                if (isResultsGranted(grantResults) && mRequest != null) {
+                    mRequest!!.grant(mRequest!!.resources)
+                    micWhiteList.add(mRequest!!.origin.toString())
+                }
             }
-            mRequest = null
+
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
+    }
+
+    private fun isResultsGranted(grantResults: IntArray): Boolean {
+        for (result in grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) return false
+        }
+        return true
     }
 
     override fun onBackPressed() {
